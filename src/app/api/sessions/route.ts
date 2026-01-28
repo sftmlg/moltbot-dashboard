@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 
 import type { Session } from "@/types";
+import { createMoltBotClient } from "@/lib/moltbot-client";
 
-// Mock data - replace with database queries
+// Mock data - fallback when MoltBot is not available
 const mockSessions: Session[] = [
   {
     id: "1",
@@ -39,13 +40,52 @@ const mockSessions: Session[] = [
 ];
 
 export async function GET() {
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  const moltbotToken = process.env.NEXT_PUBLIC_MOLTBOT_TOKEN || process.env.MOLTBOT_TOKEN;
+  
+  // If no token is set, use mock data (useful for Vercel deployment)
+  if (!moltbotToken) {
+    console.log("No MoltBot token found, using mock data");
+    return NextResponse.json({
+      sessions: mockSessions,
+      total: mockSessions.length,
+      source: "mock"
+    });
+  }
 
-  return NextResponse.json({
-    sessions: mockSessions,
-    total: mockSessions.length,
-  });
+  try {
+    const client = createMoltBotClient();
+    if (!client) {
+      throw new Error("Failed to create MoltBot client");
+    }
+
+    const moltbotSessions = await client.getSessions();
+    
+    // Convert MoltBot sessions to our Session interface
+    const sessions: Session[] = moltbotSessions.map(session => ({
+      id: session.key,
+      title: `${session.role || 'Agent'} (${session.device || session.key})`,
+      createdAt: new Date(session.lastActivity),
+      updatedAt: new Date(session.lastActivity),
+      messageCount: session.tokens || 0,
+      preview: `Status: ${session.status} | Model: ${session.model}`,
+    }));
+
+    return NextResponse.json({
+      sessions,
+      total: sessions.length,
+      source: "moltbot"
+    });
+  } catch (error) {
+    console.error("Failed to fetch MoltBot sessions:", error);
+    
+    // Fallback to mock data on error
+    return NextResponse.json({
+      sessions: mockSessions,
+      total: mockSessions.length,
+      source: "mock",
+      error: error instanceof Error ? error.message : "Unknown error"
+    });
+  }
 }
 
 export async function POST(request: Request) {

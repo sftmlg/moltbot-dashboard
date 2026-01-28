@@ -225,28 +225,68 @@
 .delay-250 { animation-delay: 250ms; }
 .delay-300 { animation-delay: 300ms; }
 
-/* Hover glow effects */
+/* Enhanced card effects with glassmorphism */
 .glow-card {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid hsl(var(--border));
+  /* Glassmorphism effect */
+  background: linear-gradient(
+    135deg,
+    hsl(var(--card)) 0%,
+    hsl(var(--card) / 0.8) 100%
+  );
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  /* Subtle inner glow */
+  box-shadow: 
+    inset 0 1px 0 hsl(var(--foreground) / 0.1),
+    0 1px 3px hsl(var(--foreground) / 0.1);
 }
 
 .glow-card:hover {
-  border-color: hsl(var(--brand-secondary) / 0.3);
+  border-color: hsl(var(--brand-secondary) / 0.4);
+  /* Enhanced glassmorphism on hover */
+  background: linear-gradient(
+    135deg,
+    hsl(var(--card)) 0%,
+    hsl(var(--brand-secondary) / 0.05) 50%,
+    hsl(var(--card) / 0.9) 100%
+  );
   box-shadow: 
+    inset 0 1px 0 hsl(var(--brand-secondary) / 0.2),
     0 0 0 1px hsl(var(--brand-secondary) / 0.1),
-    0 4px 16px hsl(var(--brand-secondary) / 0.1),
-    0 8px 32px hsl(var(--brand-secondary) / 0.05);
-  transform: translateY(-1px);
+    0 4px 16px hsl(var(--brand-secondary) / 0.15),
+    0 8px 32px hsl(var(--brand-secondary) / 0.08),
+    0 1px 3px hsl(var(--foreground) / 0.1);
+  transform: translateY(-2px) scale(1.005);
+}
+
+.glow-accent {
+  /* Base glassmorphism for accent cards */
+  background: linear-gradient(
+    135deg,
+    hsl(var(--card)) 0%,
+    hsl(var(--brand-accent) / 0.02) 50%,
+    hsl(var(--card) / 0.95) 100%
+  );
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .glow-accent:hover {
-  border-color: hsl(var(--brand-accent) / 0.3);
+  border-color: hsl(var(--brand-accent) / 0.4);
+  background: linear-gradient(
+    135deg,
+    hsl(var(--card)) 0%,
+    hsl(var(--brand-accent) / 0.08) 50%,
+    hsl(var(--card) / 0.9) 100%
+  );
   box-shadow: 
+    inset 0 1px 0 hsl(var(--brand-accent) / 0.2),
     0 0 0 1px hsl(var(--brand-accent) / 0.1),
-    0 4px 16px hsl(var(--brand-accent) / 0.1),
-    0 8px 32px hsl(var(--brand-accent) / 0.05);
-  transform: translateY(-1px);
+    0 4px 16px hsl(var(--brand-accent) / 0.15),
+    0 8px 32px hsl(var(--brand-accent) / 0.08);
+  transform: translateY(-2px) scale(1.005);
 }
 
 /* Status dot animation */

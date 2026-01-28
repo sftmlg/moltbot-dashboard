@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Clock, Activity } from "lucide-react";
+import { AgentDetailModal } from "./agent-detail-modal";
 import type { AgentStatus } from "@/hooks/use-agent-status";
 
 interface AgentStatusCardProps {
@@ -11,6 +13,7 @@ interface AgentStatusCardProps {
 }
 
 export function AgentStatusCard({ agent, index = 0 }: AgentStatusCardProps) {
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const getStatusColor = () => {
     switch (agent.status) {
       case "online":
@@ -53,10 +56,12 @@ export function AgentStatusCard({ agent, index = 0 }: AgentStatusCardProps) {
   const statusColor = getStatusColor();
   
   return (
-    <Card 
-      className="glow-card border-border/50 animate-staggered-fade" 
-      style={{ animationDelay: `${index * 100}ms` }}
-    >
+    <>
+      <Card 
+        className="glow-card border-border/50 animate-staggered-fade cursor-pointer hover:scale-[1.02] transition-transform" 
+        style={{ animationDelay: `${index * 100}ms` }}
+        onClick={() => setShowDetailModal(true)}
+      >
       <CardHeader className="p-4">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
@@ -110,5 +115,12 @@ export function AgentStatusCard({ agent, index = 0 }: AgentStatusCardProps) {
         </div>
       </CardContent>
     </Card>
+    
+    <AgentDetailModal
+      agent={agent}
+      open={showDetailModal}
+      onClose={() => setShowDetailModal(false)}
+    />
+  </>
   );
 }

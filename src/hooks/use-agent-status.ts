@@ -15,14 +15,17 @@ interface UseAgentStatusOptions {
   wsUrl?: string;
   reconnectInterval?: number;
   enableMockData?: boolean;
+  pollInterval?: number;
 }
 
 export function useAgentStatus(options: UseAgentStatusOptions = {}) {
   const {
-    wsUrl = "ws://localhost:3001/agents",
     reconnectInterval = 5000,
-    enableMockData = true, // Use mock data for now
+    enableMockData = true, // Use mock data for development
   } = options;
+  
+  // Keep wsUrl for potential WebSocket usage
+  const wsUrl = options.wsUrl || "ws://localhost:3001/agents";
 
   const [agents, setAgents] = useState<AgentStatus[]>([]);
   const [isConnected, setIsConnected] = useState(false);
@@ -31,44 +34,131 @@ export function useAgentStatus(options: UseAgentStatusOptions = {}) {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const mockIntervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const pollIntervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
-  // Mock data generator for development
+  // Fetch agent data from API
+  const fetchAgentData = useCallback(async () => {
+    try {
+      const response = await fetch('/api/sessions');
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      // Convert sessions to agent status format
+      const agentStatuses: AgentStatus[] = data.sessions.map((session: any) => {
+        const lastActivity = new Date(session.updatedAt);
+        const now = new Date();
+        const minutesAgo = (now.getTime() - lastActivity.getTime()) / (1000 * 60);
+        
+        // Determine status based on last activity
+        let status: "online" | "busy" | "offline";
+        if (minutesAgo < 2) status = "online";
+        else if (minutesAgo < 10) status = "busy";
+        else status = "offline";
+
+        // Generate consistent response time based on agent name
+        const nameHash = session.title.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const responseTime = 300 + (nameHash % 2000); // 300-2300ms range
+
+        return {
+          id: session.id,
+          name: session.title,
+          status,
+          currentTask: status === "busy" ? session.preview.substring(0, 50) + "..." : undefined,
+          responseTime,
+          lastSeen: session.updatedAt,
+        };
+      });
+
+      // Sort agents by status priority and then by name
+      agentStatuses.sort((a, b) => {
+        const statusPriority = { online: 0, busy: 1, offline: 2 };
+        const statusDiff = statusPriority[a.status] - statusPriority[b.status];
+        if (statusDiff !== 0) return statusDiff;
+        return a.name.localeCompare(b.name);
+      });
+
+      setAgents(agentStatuses);
+      setIsConnected(true);
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching agent data:", err);
+      setError(err instanceof Error ? err.message : "Unknown error");
+      setIsConnected(false);
+      
+      // Fall back to mock data if real data fails
+      if (!enableMockData) {
+        setAgents(generateMockAgents());
+        setIsConnected(true);
+        setError("Using fallback data - API unavailable");
+      }
+    }
+  }, [enableMockData]);
+
+  // Mock data generator for development - maintains stable order
   const generateMockAgents = useCallback((): AgentStatus[] => {
-    const mockAgents: AgentStatus[] = [
+    // Fixed base agents with stable order (sorted by name)
+    const baseAgents = [
+      {
+        id: "agent-calendar",
+        name: "Calendar Sync",
+        baseStatus: "online" as const,
+        taskChance: 0.8,
+        taskText: "Syncing calendar events",
+        responseRange: [800, 3000],
+        maxOfflineTime: 300000,
+      },
+      {
+        id: "agent-drive", 
+        name: "Drive Manager",
+        baseStatus: "online" as const,
+        taskChance: 0.6,
+        taskText: "Organizing documents",
+        responseRange: [600, 2500],
+        maxOfflineTime: 600000,
+      },
       {
         id: "agent-main",
-        name: "Main Assistant",
-        status: Math.random() > 0.8 ? "busy" : "online",
-        currentTask: Math.random() > 0.5 ? "Processing email" : undefined,
-        responseTime: Math.floor(Math.random() * 2000) + 500,
-        lastSeen: new Date().toISOString(),
+        name: "Main Assistant", 
+        baseStatus: "online" as const,
+        taskChance: 0.5,
+        taskText: "Processing email",
+        responseRange: [500, 2000],
+        maxOfflineTime: 0,
       },
       {
         id: "agent-whatsapp",
         name: "WhatsApp Manager",
-        status: Math.random() > 0.6 ? "online" : Math.random() > 0.5 ? "busy" : "offline",
-        currentTask: Math.random() > 0.7 ? "Handling WhatsApp messages" : undefined,
-        responseTime: Math.floor(Math.random() * 1500) + 300,
-        lastSeen: new Date().toISOString(),
-      },
-      {
-        id: "agent-calendar",
-        name: "Calendar Sync",
-        status: Math.random() > 0.7 ? "online" : "offline",
-        currentTask: Math.random() > 0.8 ? "Syncing calendar events" : undefined,
-        responseTime: Math.floor(Math.random() * 3000) + 800,
-        lastSeen: new Date(Date.now() - Math.random() * 300000).toISOString(),
-      },
-      {
-        id: "agent-drive",
-        name: "Drive Manager",
-        status: Math.random() > 0.5 ? "online" : Math.random() > 0.3 ? "busy" : "offline",
-        currentTask: Math.random() > 0.6 ? "Organizing documents" : undefined,
-        responseTime: Math.floor(Math.random() * 2500) + 600,
-        lastSeen: new Date(Date.now() - Math.random() * 600000).toISOString(),
+        baseStatus: "online" as const, 
+        taskChance: 0.7,
+        taskText: "Handling WhatsApp messages",
+        responseRange: [300, 1500],
+        maxOfflineTime: 0,
       },
     ];
-    return mockAgents;
+
+    return baseAgents.map(agent => {
+      // More natural status transitions - less jarring
+      let status: "online" | "busy" | "offline" = agent.baseStatus;
+      
+      // Small chance of status change
+      const statusRoll = Math.random();
+      if (statusRoll > 0.9) status = "busy";
+      else if (statusRoll > 0.85 && agent.maxOfflineTime > 0) status = "offline";
+      
+      return {
+        id: agent.id,
+        name: agent.name,
+        status,
+        currentTask: Math.random() > agent.taskChance ? agent.taskText : undefined,
+        responseTime: Math.floor(Math.random() * (agent.responseRange[1] - agent.responseRange[0])) + agent.responseRange[0],
+        lastSeen: status === "offline" 
+          ? new Date(Date.now() - Math.random() * agent.maxOfflineTime).toISOString()
+          : new Date().toISOString(),
+      };
+    });
   }, []);
 
   // Mock data simulation
@@ -80,19 +170,40 @@ export function useAgentStatus(options: UseAgentStatusOptions = {}) {
     setIsConnected(true);
     setError(null);
 
-    // Update mock data every 3-8 seconds
+    // Update mock data every 10-15 seconds for natural, non-jarring updates
     mockIntervalRef.current = setInterval(() => {
       setAgents(generateMockAgents());
-    }, Math.random() * 5000 + 3000);
+    }, Math.random() * 5000 + 10000);
   }, [generateMockAgents, enableMockData]);
 
-  // WebSocket connection logic
+  // Polling for real data
+  const startPolling = useCallback(() => {
+    if (enableMockData) {
+      startMockDataUpdates();
+      return;
+    }
+
+    // Initial fetch
+    fetchAgentData();
+
+    // Set up polling
+    pollIntervalRef.current = setInterval(() => {
+      fetchAgentData();
+    }, pollInterval);
+  }, [enableMockData, startMockDataUpdates, fetchAgentData, pollInterval]);
+
+  // WebSocket connection logic (fallback)
   const connect = useCallback(() => {
     if (enableMockData) {
       startMockDataUpdates();
       return;
     }
 
+    // Start with polling instead of WebSocket
+    startPolling();
+
+    // Optional: Implement WebSocket if needed
+    /*
     try {
       wsRef.current = new WebSocket(wsUrl);
 
@@ -129,7 +240,8 @@ export function useAgentStatus(options: UseAgentStatusOptions = {}) {
       setError("Failed to establish WebSocket connection");
       setIsConnected(false);
     }
-  }, [wsUrl, reconnectInterval, enableMockData, startMockDataUpdates]);
+    */
+  }, [enableMockData, startMockDataUpdates, startPolling]);
 
   const disconnect = useCallback(() => {
     if (wsRef.current) {
@@ -143,6 +255,10 @@ export function useAgentStatus(options: UseAgentStatusOptions = {}) {
     
     if (mockIntervalRef.current) {
       clearInterval(mockIntervalRef.current);
+    }
+
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
     }
     
     setIsConnected(false);
@@ -166,6 +282,9 @@ export function useAgentStatus(options: UseAgentStatusOptions = {}) {
       if (mockIntervalRef.current) {
         clearInterval(mockIntervalRef.current);
       }
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+      }
     };
   }, []);
 
@@ -174,5 +293,6 @@ export function useAgentStatus(options: UseAgentStatusOptions = {}) {
     isConnected,
     error,
     reconnect: connect,
+    refresh: enableMockData ? () => setAgents(generateMockAgents()) : fetchAgentData,
   };
 }
