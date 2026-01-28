@@ -1,6 +1,6 @@
 "use client";
 
-import { Moon, Save, Sun } from "lucide-react";
+import { Moon, Save, Sun, Wifi, WifiOff, AlertCircle, CheckCircle } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 

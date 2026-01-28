@@ -12,27 +12,20 @@ export interface AgentStatus {
 }
 
 interface UseAgentStatusOptions {
-  wsUrl?: string;
-  reconnectInterval?: number;
   enableMockData?: boolean;
   pollInterval?: number;
 }
 
 export function useAgentStatus(options: UseAgentStatusOptions = {}) {
   const {
-    reconnectInterval = 5000,
-    enableMockData = true, // Use mock data for development
+    enableMockData = false, // Default to real data
+    pollInterval = 5000,
   } = options;
-  
-  // Keep wsUrl for potential WebSocket usage
-  const wsUrl = options.wsUrl || "ws://localhost:3001/agents";
 
   const [agents, setAgents] = useState<AgentStatus[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const mockIntervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const pollIntervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
@@ -59,7 +52,7 @@ export function useAgentStatus(options: UseAgentStatusOptions = {}) {
         else status = "offline";
 
         // Generate consistent response time based on agent name
-        const nameHash = session.title.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const nameHash = session.title.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
         const responseTime = 300 + (nameHash % 2000); // 300-2300ms range
 
         return {
@@ -153,7 +146,7 @@ export function useAgentStatus(options: UseAgentStatusOptions = {}) {
         name: agent.name,
         status,
         currentTask: Math.random() > agent.taskChance ? agent.taskText : undefined,
-        responseTime: Math.floor(Math.random() * (agent.responseRange[1] - agent.responseRange[0])) + agent.responseRange[0],
+        responseTime: Math.floor(Math.random() * (agent.responseRange[1]! - agent.responseRange[0]!)) + agent.responseRange[0]!,
         lastSeen: status === "offline" 
           ? new Date(Date.now() - Math.random() * agent.maxOfflineTime).toISOString()
           : new Date().toISOString(),
@@ -192,67 +185,12 @@ export function useAgentStatus(options: UseAgentStatusOptions = {}) {
     }, pollInterval);
   }, [enableMockData, startMockDataUpdates, fetchAgentData, pollInterval]);
 
-  // WebSocket connection logic (fallback)
+  // Main connect function
   const connect = useCallback(() => {
-    if (enableMockData) {
-      startMockDataUpdates();
-      return;
-    }
-
-    // Start with polling instead of WebSocket
     startPolling();
-
-    // Optional: Implement WebSocket if needed
-    /*
-    try {
-      wsRef.current = new WebSocket(wsUrl);
-
-      wsRef.current.onopen = () => {
-        setIsConnected(true);
-        setError(null);
-      };
-
-      wsRef.current.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (data.type === "agents_update") {
-            setAgents(data.agents);
-          }
-        } catch (err) {
-          console.error("Failed to parse WebSocket message:", err);
-        }
-      };
-
-      wsRef.current.onerror = () => {
-        setError("WebSocket connection error");
-        setIsConnected(false);
-      };
-
-      wsRef.current.onclose = () => {
-        setIsConnected(false);
-        
-        // Attempt reconnection
-        reconnectTimeoutRef.current = setTimeout(() => {
-          connect();
-        }, reconnectInterval);
-      };
-    } catch (err) {
-      setError("Failed to establish WebSocket connection");
-      setIsConnected(false);
-    }
-    */
-  }, [enableMockData, startMockDataUpdates, startPolling]);
+  }, [startPolling]);
 
   const disconnect = useCallback(() => {
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
-    }
-    
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-    }
-    
     if (mockIntervalRef.current) {
       clearInterval(mockIntervalRef.current);
     }
@@ -276,9 +214,6 @@ export function useAgentStatus(options: UseAgentStatusOptions = {}) {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-      }
       if (mockIntervalRef.current) {
         clearInterval(mockIntervalRef.current);
       }
