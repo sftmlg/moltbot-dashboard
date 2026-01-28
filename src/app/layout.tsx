@@ -53,9 +53,9 @@ export default function RootLayout({
             </a>
             <AppSidebar />
             <SidebarInset>
-              <header className="flex h-12 md:h-14 shrink-0 items-center gap-2 border-b border-border/50 px-3 md:px-4">
+              <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border/50 px-3 md:px-4">
                 <SidebarTrigger 
-                  className="-ml-1 h-10 w-10 md:h-9 md:w-9" 
+                  className="-ml-1 h-10 w-10" 
                   aria-label="Toggle sidebar navigation"
                 />
               </header>

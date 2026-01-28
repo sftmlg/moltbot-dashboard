@@ -1,9 +1,13 @@
-import { Activity, Clock, MessageSquare, Settings, Sparkles, Wrench } from "lucide-react";
+"use client";
+
+import { Activity, Clock, MessageSquare, Settings, Sparkles, Wrench, Users } from "lucide-react";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AgentStatusCard } from "@/components/agent-status-card";
+import { useAgentStatus } from "@/hooks/use-agent-status";
 
 const stats = [
   {
@@ -73,10 +77,11 @@ const quickActions = [
 ];
 
 export default function DashboardPage() {
+  const { agents, isConnected, error } = useAgentStatus();
   return (
-    <main className="p-4 md:p-6 space-y-6 md:space-y-8 animate-fadeIn" aria-label="Dashboard">
+    <main className="p-4 md:p-6 space-y-6 md:space-y-8" aria-label="Dashboard">
       {/* Header */}
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between animate-staggered-fade delay-0">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight bg-gradient-to-r from-orange-500 via-orange-400 to-sky-500 bg-clip-text text-transparent">
             Dashboard
@@ -96,11 +101,15 @@ export default function DashboardPage() {
       </header>
 
       {/* Stats Grid - 2 cols on mobile, 4 on desktop */}
-      <section aria-labelledby="stats-heading">
+      <section aria-labelledby="stats-heading" className="animate-staggered-fade delay-100">
         <h2 id="stats-heading" className="sr-only">Statistics</h2>
         <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
-          {stats.map((stat) => (
-            <Card key={stat.title} className="p-3 md:p-4 border-border/50 hover:border-border transition-colors">
+          {stats.map((stat, index) => (
+            <Card 
+              key={stat.title} 
+              className="p-3 md:p-4 glow-card border-border/50 animate-staggered-fade"
+              style={{ animationDelay: `${150 + index * 50}ms` }}
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 pb-2">
                 <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
                 <div className={`p-1.5 rounded-md ${stat.bgColor}`}>
@@ -116,11 +125,44 @@ export default function DashboardPage() {
         </div>
       </section>
 
+      {/* Live Agents Section */}
+      <section aria-labelledby="agents-heading" className="animate-staggered-fade delay-200">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-sky-500" />
+            <h2 id="agents-heading" className="text-lg md:text-xl font-semibold">Live Agents</h2>
+          </div>
+          {isConnected ? (
+            <Badge variant="outline" className="border-emerald-500/50 text-emerald-500 bg-emerald-500/10">
+              <span className="mr-1.5 h-2 w-2 rounded-full bg-emerald-500 animate-status-pulse" />
+              Connected
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="border-amber-500/50 text-amber-500 bg-amber-500/10">
+              <span className="mr-1.5 h-2 w-2 rounded-full bg-amber-500" />
+              Connecting...
+            </Badge>
+          )}
+        </div>
+        
+        {error && (
+          <div className="text-sm text-red-500 mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+            {error}
+          </div>
+        )}
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {agents.map((agent, index) => (
+            <AgentStatusCard key={agent.id} agent={agent} index={index} />
+          ))}
+        </div>
+      </section>
+
       {/* Main Grid */}
       <div className="grid gap-4 md:gap-6 lg:grid-cols-3">
         {/* Recent Conversations */}
-        <section className="lg:col-span-2" aria-labelledby="conversations-heading">
-          <Card className="border-border/50">
+        <section className="lg:col-span-2 animate-staggered-fade delay-250" aria-labelledby="conversations-heading">
+          <Card className="glow-card border-border/50">
             <CardHeader className="p-4 md:p-6">
               <CardTitle id="conversations-heading" className="text-base md:text-lg flex items-center gap-2">
                 <MessageSquare className="h-5 w-5 text-orange-500" />
@@ -136,9 +178,9 @@ export default function DashboardPage() {
                   <li key={conv.id}>
                     <Link
                       href={`/chat?session=${conv.id}`}
-                      className="block p-3 rounded-lg border border-border/50 hover:border-orange-500/30 hover:bg-orange-500/5 focus-visible:ring-2 focus-visible:ring-orange-500 transition-all min-h-11"
+                      className="block p-3 rounded-lg border border-border/50 hover:border-orange-500/30 hover:bg-orange-500/5 focus-visible:ring-2 focus-visible:ring-orange-500 transition-all min-h-11 animate-staggered-fade"
                       aria-label={`Open conversation: ${conv.title}`}
-                      style={{ animationDelay: `${index * 50}ms` }}
+                      style={{ animationDelay: `${300 + index * 50}ms` }}
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="space-y-1 min-w-0">
@@ -162,8 +204,8 @@ export default function DashboardPage() {
         </section>
 
         {/* Quick Actions */}
-        <section aria-labelledby="actions-heading">
-          <Card className="border-border/50">
+        <section aria-labelledby="actions-heading" className="animate-staggered-fade delay-300">
+          <Card className="glow-accent border-border/50">
             <CardHeader className="p-4 md:p-6">
               <CardTitle id="actions-heading" className="text-base md:text-lg flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-sky-500" />
@@ -172,16 +214,17 @@ export default function DashboardPage() {
               <CardDescription className="text-xs md:text-sm">Jump right in</CardDescription>
             </CardHeader>
             <CardContent className="p-4 pt-0 md:p-6 md:pt-0 space-y-3">
-              {quickActions.map((action) => (
+              {quickActions.map((action, index) => (
                 <Button
                   key={action.href}
                   asChild
                   variant={action.primary ? "default" : "outline"}
-                  className={`w-full justify-start h-auto min-h-12 md:min-h-11 py-3 ${
+                  className={`w-full justify-start h-auto min-h-12 md:min-h-11 py-3 animate-staggered-fade ${
                     action.primary 
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40" 
                       : "hover:border-sky-500/30 hover:bg-sky-500/5"
                   }`}
+                  style={{ animationDelay: `${350 + index * 100}ms` }}
                 >
                   <Link href={action.href}>
                     {action.primary ? (

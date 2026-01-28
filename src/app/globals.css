@@ -110,34 +110,34 @@
 
 .dark {
   /* Brand Colors - KI für KMU (same in dark) */
-  --brand-primary: 222 47% 11%;
+  --brand-primary: 220 31% 24%;      /* slate-700 with warm tint */
   --brand-secondary: 25 95% 53%;
   --brand-accent: 199 89% 48%;
   
-  /* Dark Mode - Semantic Colors */
-  --background: 222 47% 6%;          /* Darker than slate-900 */
+  /* Dark Mode - Semantic Colors - Lighter with warm tint */
+  --background: 220 31% 18%;         /* slate-800 with warm tint */
   --foreground: 210 40% 98%;
-  --card: 222 47% 11%;               /* slate-900 */
+  --card: 220 31% 24%;               /* slate-700 with warm tint */
   --card-foreground: 210 40% 98%;
-  --popover: 222 47% 11%;
+  --popover: 220 31% 24%;
   --popover-foreground: 210 40% 98%;
   --primary: 25 95% 53%;             /* Orange for CTAs */
-  --primary-foreground: 222 47% 11%;
-  --secondary: 222 47% 16%;
+  --primary-foreground: 220 31% 18%;
+  --secondary: 220 31% 30%;          /* Lighter with warm tint */
   --secondary-foreground: 210 40% 98%;
-  --muted: 222 47% 16%;
-  --muted-foreground: 215 20% 65%;
+  --muted: 220 31% 30%;              /* Lighter with warm tint */
+  --muted-foreground: 215 20% 70%;
   --accent: 199 89% 48%;             /* Sky blue accent */
   --accent-foreground: 210 40% 98%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 210 40% 98%;
-  --border: 222 47% 20%;
-  --input: 222 47% 16%;
+  --border: 220 31% 35%;             /* Lighter borders */
+  --input: 220 31% 30%;
   --ring: 25 95% 53%;
   --success: 142 71% 45%;
   --success-foreground: 210 40% 98%;
   --warning: 38 92% 50%;
-  --warning-foreground: 222 47% 11%;
+  --warning-foreground: 220 31% 18%;
   
   /* Charts - vibrant for dark mode */
   --chart-1: 25 95% 53%;             /* Orange */
@@ -146,14 +146,14 @@
   --chart-4: 38 92% 50%;             /* Amber */
   --chart-5: 280 85% 65%;            /* Purple */
   
-  /* Sidebar */
-  --sidebar: 222 47% 8%;
+  /* Sidebar - Lighter with warm tint */
+  --sidebar: 220 31% 20%;            /* Slightly lighter than background */
   --sidebar-foreground: 210 40% 98%;
   --sidebar-primary: 25 95% 53%;     /* Orange */
-  --sidebar-primary-foreground: 222 47% 11%;
-  --sidebar-accent: 222 47% 14%;
+  --sidebar-primary-foreground: 220 31% 18%;
+  --sidebar-accent: 220 31% 28%;     /* Lighter accent */
   --sidebar-accent-foreground: 210 40% 98%;
-  --sidebar-border: 222 47% 18%;
+  --sidebar-border: 220 31% 32%;     /* Lighter border */
   --sidebar-ring: 25 95% 53%;
 }
 
@@ -163,6 +163,16 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Subtle noise texture for refined background */
+    background-image: 
+      radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0);
+    background-size: 20px 20px;
+  }
+  
+  /* Override noise texture for light mode */
+  :not(.dark) body {
+    background-image: 
+      radial-gradient(circle at 1px 1px, rgba(0,0,0,0.02) 1px, transparent 0);
   }
 }
 
@@ -187,7 +197,75 @@
   display: none;
 }
 
-/* Custom animations */
+/* ============================================
+   Enhanced Animations & Effects
+   ============================================ */
+
+/* Staggered page load animations */
+@keyframes staggeredFadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(8px) scale(0.98); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0) scale(1); 
+  }
+}
+
+.animate-staggered-fade {
+  animation: staggeredFadeIn 0.6s ease-out;
+}
+
+.delay-0 { animation-delay: 0ms; }
+.delay-50 { animation-delay: 50ms; }
+.delay-100 { animation-delay: 100ms; }
+.delay-150 { animation-delay: 150ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-250 { animation-delay: 250ms; }
+.delay-300 { animation-delay: 300ms; }
+
+/* Hover glow effects */
+.glow-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid hsl(var(--border));
+}
+
+.glow-card:hover {
+  border-color: hsl(var(--brand-secondary) / 0.3);
+  box-shadow: 
+    0 0 0 1px hsl(var(--brand-secondary) / 0.1),
+    0 4px 16px hsl(var(--brand-secondary) / 0.1),
+    0 8px 32px hsl(var(--brand-secondary) / 0.05);
+  transform: translateY(-1px);
+}
+
+.glow-accent:hover {
+  border-color: hsl(var(--brand-accent) / 0.3);
+  box-shadow: 
+    0 0 0 1px hsl(var(--brand-accent) / 0.1),
+    0 4px 16px hsl(var(--brand-accent) / 0.1),
+    0 8px 32px hsl(var(--brand-accent) / 0.05);
+  transform: translateY(-1px);
+}
+
+/* Status dot animation */
+@keyframes statusPulse {
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1); 
+  }
+  50% { 
+    opacity: 0.7; 
+    transform: scale(1.2); 
+  }
+}
+
+.animate-status-pulse {
+  animation: statusPulse 2s ease-in-out infinite;
+}
+
+/* Legacy animations (keep for backward compatibility) */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: translateY(0); }
@@ -204,17 +282,8 @@
   animation: slideIn 0.3s ease-out;
 }
 
-@keyframes pulse-delayed {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 1; }
-}
-
 .delay-75 {
   animation-delay: 75ms;
-}
-
-.delay-150 {
-  animation-delay: 150ms;
 }
 
 /* ============================================
