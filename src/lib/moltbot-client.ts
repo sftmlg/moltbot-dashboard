@@ -336,8 +336,16 @@ let moltbotClient: MoltBotClient | null = null;
 
 export function createMoltBotClient(): MoltBotClient | null {
   try {
-    const wsUrl = process.env.NEXT_PUBLIC_MOLTBOT_GATEWAY_URL || 'ws://127.0.0.1:18789';
-    const httpUrl = process.env.NEXT_PUBLIC_MOLTBOT_GATEWAY_HTTP || 'http://127.0.0.1:18789';
+    // In browser environment, check if we're likely in production (Vercel)
+    const isProduction = typeof window !== 'undefined' && 
+                        (window.location.hostname.includes('vercel.app') || 
+                         window.location.hostname !== 'localhost');
+    
+    // Use environment variables if available, otherwise fallback to development defaults
+    const wsUrl = process.env.NEXT_PUBLIC_MOLTBOT_GATEWAY_URL || 
+                  (isProduction ? 'wss://gateway.moltbot.dev' : 'ws://127.0.0.1:18789');
+    const httpUrl = process.env.NEXT_PUBLIC_MOLTBOT_GATEWAY_HTTP || 
+                    (isProduction ? 'https://gateway.moltbot.dev' : 'http://127.0.0.1:18789');
     const token = process.env.NEXT_PUBLIC_MOLTBOT_TOKEN || '7894dc8f051354c152397248947f0500';
 
     if (!moltbotClient) {

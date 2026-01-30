@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import { createMoltBotClient } from "@/lib/moltbot-client";
+import type { Session } from "@/lib/moltbot-client";
 
 export interface AgentStatus {
   id: string;
@@ -9,6 +11,9 @@ export interface AgentStatus {
   currentTask?: string;
   responseTime: number; // in milliseconds
   lastSeen: string;
+  sessionKey?: string;
+  role?: string;
+  scope?: string;
 }
 
 interface UseAgentStatusOptions {
@@ -29,39 +34,54 @@ export function useAgentStatus(options: UseAgentStatusOptions = {}) {
   const mockIntervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const pollIntervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
-  // Fetch agent data from API
+  // Fetch real agent data from MoltBot gateway
   const fetchAgentData = useCallback(async () => {
     try {
-      const response = await fetch('/api/sessions');
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status} ${response.statusText}`);
+      const client = createMoltBotClient();
+      if (!client) {
+        throw new Error("Failed to create MoltBot client");
       }
 
-      const data = await response.json();
+      // Ensure connection
+      if (!client.connected) {
+        await client.connect();
+      }
+
+      // Get sessions from the gateway
+      const sessions = await client.getSessions();
       
       // Convert sessions to agent status format
-      const agentStatuses: AgentStatus[] = data.sessions.map((session: any) => {
-        const lastActivity = new Date(session.updatedAt);
-        const now = new Date();
-        const minutesAgo = (now.getTime() - lastActivity.getTime()) / (1000 * 60);
+      const agentStatuses: AgentStatus[] = sessions.map((session: Session) => {
         
-        // Determine status based on last activity
+        // Map session status to our status format
         let status: "online" | "busy" | "offline";
-        if (minutesAgo < 2) status = "online";
-        else if (minutesAgo < 10) status = "busy";
-        else status = "offline";
+        switch (session.status) {
+          case 'active':
+            status = "online";
+            break;
+          case 'idle':
+            status = "busy";
+            break;
+          case 'closed':
+          default:
+            status = "offline";
+            break;
+        }
 
-        // Generate consistent response time based on agent name
-        const nameHash = session.title.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
-        const responseTime = 300 + (nameHash % 2000); // 300-2300ms range
+        // Generate response time based on session key hash for consistency
+        const keyHash = session.key.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
+        const responseTime = 300 + (keyHash % 2000); // 300-2300ms range
 
         return {
-          id: session.id,
-          name: session.title,
+          id: session.key,
+          name: session.role || session.device || 'Unknown Agent',
           status,
-          currentTask: status === "busy" ? session.preview.substring(0, 50) + "..." : undefined,
+          currentTask: session.scope && status === "busy" ? `Working on ${session.scope}` : undefined,
           responseTime,
-          lastSeen: session.updatedAt,
+          lastSeen: session.lastActivity,
+          sessionKey: session.key,
+          role: session.role,
+          scope: session.scope,
         };
       });
 
@@ -74,21 +94,19 @@ export function useAgentStatus(options: UseAgentStatusOptions = {}) {
       });
 
       setAgents(agentStatuses);
-      setIsConnected(true);
+      setIsConnected(client.connected);
       setError(null);
     } catch (err) {
       console.error("Error fetching agent data:", err);
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setError(err instanceof Error ? err.message : "Gateway connection failed");
       setIsConnected(false);
       
-      // Fall back to mock data if real data fails
-      if (!enableMockData) {
-        setAgents(generateMockAgents());
-        setIsConnected(true);
-        setError("Using fallback data - API unavailable");
-      }
+      // Fall back to mock data if real data fails (especially for Vercel deployment)
+      setAgents(generateMockAgents());
+      setIsConnected(true);
+      setError("Using fallback data - Gateway unreachable");
     }
-  }, [enableMockData]);
+  }, []);
 
   // Mock data generator for development - maintains stable order
   const generateMockAgents = useCallback((): AgentStatus[] => {

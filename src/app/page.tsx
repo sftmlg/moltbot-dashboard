@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AgentStatusCard } from "@/components/agent-status-card";
+import { TodoSection } from "@/components/todo-section";
 import { useAgentStatus } from "@/hooks/use-agent-status";
 
 const stats = [
@@ -247,6 +248,11 @@ export default function DashboardPage() {
           </Card>
         </section>
       </div>
+
+      {/* Todos Section - Bottom of dashboard */}
+      <section aria-labelledby="todos-heading" className="animate-staggered-fade delay-350">
+        <TodoSection />
+      </section>
     </main>
   );
 }
