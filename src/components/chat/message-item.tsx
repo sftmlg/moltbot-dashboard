@@ -21,12 +21,12 @@ export function MessageItem({ message }: MessageItemProps) {
       className={cn("flex gap-3 md:gap-4 p-3 md:p-4", isUser ? "flex-row-reverse" : "flex-row")}
       aria-label={`Message from ${isUser ? "you" : "MoltBot"}`}
     >
-      <Avatar className="h-8 w-8 md:h-8 md:w-8 shrink-0">
+      <Avatar className="h-8 w-8 md:h-9 md:w-9 shrink-0 shadow-md">
         <AvatarFallback 
           className={cn(
             isUser 
-              ? "bg-sky-500 text-white" 
-              : "bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/25"
+              ? "bg-gradient-to-br from-sky-500 to-sky-600 text-white shadow-md shadow-sky-500/25" 
+              : "bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30"
           )}
           aria-label={isUser ? "Your avatar" : "MoltBot avatar"}
         >
@@ -46,16 +46,16 @@ export function MessageItem({ message }: MessageItemProps) {
       >
         <div
           className={cn(
-            "inline-block rounded-2xl px-3 py-2 md:px-4 md:py-2 max-w-[90%] md:max-w-[85%]",
+            "inline-block rounded-2xl px-3 py-2 md:px-4 md:py-3 max-w-[90%] md:max-w-[85%] shadow-sm",
             isUser
-              ? "bg-sky-500 text-white rounded-br-md"
-              : "bg-muted rounded-bl-md"
+              ? "bg-gradient-to-br from-sky-500 to-sky-600 text-white rounded-br-md shadow-sky-500/20"
+              : "bg-muted/80 rounded-bl-md border border-border/50"
           )}
         >
           {isUser ? (
             <p className="whitespace-pre-wrap text-sm md:text-base">{message.content}</p>
           ) : (
-            <div className="prose prose-sm dark:prose-invert max-w-none prose-pre:bg-background/50 prose-pre:border prose-pre:border-border/50 prose-p:text-sm md:prose-p:text-base">
+            <div className="prose prose-sm dark:prose-invert max-w-none prose-pre:bg-background/50 prose-pre:border prose-pre:border-border/50 prose-p:text-sm md:prose-p:text-base prose-headings:text-foreground prose-strong:text-foreground prose-code:text-foreground prose-code:bg-background/50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-ul:text-sm prose-ol:text-sm">
               <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
                 {message.content}
               </ReactMarkdown>
@@ -64,10 +64,13 @@ export function MessageItem({ message }: MessageItemProps) {
         </div>
 
         {message.isStreaming && (
-          <div className="flex items-center gap-1 text-muted-foreground" aria-label="MoltBot is typing">
-            <span className="h-2 w-2 rounded-full bg-orange-500 animate-pulse" />
-            <span className="h-2 w-2 rounded-full bg-orange-500 animate-pulse delay-75" />
-            <span className="h-2 w-2 rounded-full bg-orange-500 animate-pulse delay-150" />
+          <div className="flex items-center gap-1.5 text-muted-foreground mt-2" aria-label="MoltBot is typing">
+            <span className="text-xs">MoltBot is thinking</span>
+            <div className="flex gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse" />
+              <span className="h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse delay-75" />
+              <span className="h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse delay-150" />
+            </div>
             <span className="sr-only">MoltBot is typing...</span>
           </div>
         )}

@@ -73,7 +73,32 @@ export async function POST(request: Request) {
     }
   } catch (error) {
     console.error("Chat API error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    
+    // Return a user-friendly error response
+    const response = `## 🔧 Connection Issue
+
+I'm having trouble processing your request right now. This could be due to:
+
+- **Network connectivity** - Check your internet connection
+- **Service availability** - The AI service might be temporarily unavailable
+- **Configuration** - Your API keys might need to be renewed
+
+### 🛠️ Quick Fixes:
+1. **Refresh the page** and try again
+2. **Check your network** connection
+3. **Verify API keys** in your environment settings
+
+If the problem persists, the AI service might be experiencing temporary issues. Please try again in a few minutes.
+
+---
+*Error logged for debugging. If this keeps happening, check the console for more details.*`;
+
+    return NextResponse.json({ 
+      response,
+      timestamp: new Date().toISOString(),
+      source: "error-handler",
+      error: true 
+    }, { status: 200 }); // Return 200 with error message instead of 500
   }
 }
 
@@ -133,38 +158,43 @@ async function callOpenAIAPI(message: string, apiKey: string): Promise<string> {
 }
 
 function generateConfigurationMessage(message: string): string {
-  return `## 🤖 MoltBot Chat - Configuration Required
+  return `## 🤖 MoltBot Chat - Setup Required
 
 Hi there! I received your message:
 > "${message}"
 
 **I'd love to help, but I need to be connected to an AI service first.**
 
-### 🔧 Quick Setup:
+### 🔧 Quick Setup Options:
 
-**Option 1 - MoltBot Gateway (Recommended)**
-1. Set up your MoltBot gateway locally
-2. Add to your environment: \`MOLTBOT_TOKEN=your-token-here\`
-3. Configure gateway URL: \`ws://127.0.0.1:18789\`
+**🎯 Option 1: MoltBot Gateway (Recommended)**
+Connect to your local MoltBot instance for the full experience:
+- Set environment variable: \`MOLTBOT_TOKEN=your-token-here\`
+- Gateway URL: \`ws://127.0.0.1:18789\`
 
-**Option 2 - Claude API**
-1. Get an API key from [Claude Console](https://console.anthropic.com/)
-2. Add to your environment: \`ANTHROPIC_API_KEY=your-key-here\`
+**🤖 Option 2: Claude API**
+Direct integration with Anthropic's Claude:
+- Get API key: [Claude Console](https://console.anthropic.com/)
+- Set: \`ANTHROPIC_API_KEY=your-key-here\`
 
-**Option 3 - OpenAI API**  
-1. Get an API key from [OpenAI Platform](https://platform.openai.com/)
-2. Add to your environment: \`OPENAI_API_KEY=your-key-here\`
+**🚀 Option 3: OpenAI API**
+Connect with OpenAI's GPT models:
+- Get API key: [OpenAI Platform](https://platform.openai.com/)
+- Set: \`OPENAI_API_KEY=your-key-here\`
 
-### ⚙️ Configure in Dashboard:
-- Go to **Settings** → **API Configuration**
-- Enter your API key/token and save
-- Restart the dashboard
+### ⚡ Quick Start:
+1. Add your API key to your environment variables
+2. Restart the dashboard
+3. Come back and start chatting!
 
-Once configured, I'll be able to:
-- ✅ Answer questions intelligently
-- ✅ Generate code and solutions
-- ✅ Help with writing and analysis
-- ✅ Integrate with your MoltBot tools
+### 🎉 Once Connected, I can:
+- Answer questions and provide intelligent responses
+- Help with coding, debugging, and development
+- Assist with writing, research, and analysis
+- Integrate with your existing MoltBot tools and workflows
 
-*This is demo mode - connect an AI service to unlock full functionality!*`;
+**Ready to get started? Choose your preferred option above and let's chat!**
+
+---
+*💡 This message appears because no AI service is currently configured. It's not an error - just waiting for your setup!*`;
 }
