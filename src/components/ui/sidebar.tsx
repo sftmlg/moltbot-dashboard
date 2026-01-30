@@ -178,10 +178,11 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
+          className="!bg-white dark:!bg-[hsl(var(--sidebar))] text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden border-r border-sidebar-border/50"
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
+              backgroundColor: "hsl(var(--sidebar))",
             } as React.CSSProperties
           }
           side={side}
@@ -190,7 +191,7 @@ function Sidebar({
             <SheetTitle>Sidebar</SheetTitle>
             <SheetDescription>Displays the mobile sidebar.</SheetDescription>
           </SheetHeader>
-          <div className="flex h-full w-full flex-col">{children}</div>
+          <div className="flex h-full w-full flex-col bg-white dark:bg-[hsl(var(--sidebar))]">{children}</div>
         </SheetContent>
       </Sheet>
     );

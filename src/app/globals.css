@@ -470,6 +470,42 @@
 }
 
 /* ============================================
+   Mobile Navigation Enhancements
+   ============================================ */
+
+/* Ensure mobile sidebar has proper background and styling */
+@media (max-width: 767px) {
+  [data-sidebar="sidebar"][data-mobile="true"] {
+    background-color: hsl(var(--sidebar)) !important;
+    backdrop-filter: none;
+  }
+  
+  [data-sidebar="sidebar"][data-mobile="true"] > div {
+    background-color: hsl(var(--sidebar)) !important;
+  }
+  
+  /* Enhanced mobile sheet overlay for better UX */
+  [data-slot="sheet-overlay"] {
+    background-color: rgba(0, 0, 0, 0.6) !important;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+}
+
+/* Ensure proper z-index layering for mobile navigation */
+[data-slot="sheet"] {
+  z-index: 9999;
+}
+
+[data-slot="sheet-overlay"] {
+  z-index: 9998;
+}
+
+[data-slot="sheet-content"] {
+  z-index: 9999;
+}
+
+/* ============================================
    Enhanced Interactive Elements & Micro-interactions
    ============================================ */
 

@@ -32,7 +32,7 @@ export function AppSidebar() {
   const pathname = usePathname();
 
   return (
-    <Sidebar className="border-r border-sidebar-border bg-sidebar">
+    <Sidebar className="border-r border-sidebar-border bg-sidebar backdrop-blur-none">
       <SidebarHeader className="border-b border-sidebar-border px-4 h-16 flex items-center">
         <Link 
           href="/" 
