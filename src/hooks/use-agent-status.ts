@@ -98,13 +98,11 @@ export function useAgentStatus(options: UseAgentStatusOptions = {}) {
       setError(null);
     } catch (err) {
       console.error("Error fetching agent data:", err);
-      setError(err instanceof Error ? err.message : "Gateway connection failed");
+      setError("Connect to local MoltBot to see live agent status");
       setIsConnected(false);
       
-      // Fall back to mock data if real data fails (especially for Vercel deployment)
-      setAgents(generateMockAgents());
-      setIsConnected(true);
-      setError("Using fallback data - Gateway unreachable");
+      // Don't fall back to mock data - show empty state instead
+      setAgents([]);
     }
   }, []);
 
