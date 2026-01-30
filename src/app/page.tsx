@@ -126,8 +126,13 @@ export default function DashboardPage() {
         </div>
       </section>
 
+      {/* Todos Section - Prominent placement */}
+      <section aria-labelledby="todos-heading" className="animate-staggered-fade delay-200">
+        <TodoSection />
+      </section>
+
       {/* Live Agents Section */}
-      <section aria-labelledby="agents-heading" className="animate-staggered-fade delay-200">
+      <section aria-labelledby="agents-heading" className="animate-staggered-fade delay-250">
         <div className="flex items-center gap-3 mb-4">
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5 text-sky-500" />
@@ -162,7 +167,7 @@ export default function DashboardPage() {
       {/* Main Grid */}
       <div className="grid gap-4 md:gap-6 lg:grid-cols-3">
         {/* Recent Conversations */}
-        <section className="lg:col-span-2 animate-staggered-fade delay-250" aria-labelledby="conversations-heading">
+        <section className="lg:col-span-2 animate-staggered-fade delay-300" aria-labelledby="conversations-heading">
           <Card className="glow-card border-border/50">
             <CardHeader className="p-4 md:p-6">
               <CardTitle id="conversations-heading" className="text-base md:text-lg flex items-center gap-2">
@@ -181,7 +186,7 @@ export default function DashboardPage() {
                       href={`/chat?session=${conv.id}`}
                       className="block p-4 rounded-xl border border-border/60 hover:border-orange-500/40 hover:bg-orange-500/6 focus-visible:ring-2 focus-visible:ring-orange-500 transition-all duration-300 min-h-12 animate-staggered-fade btn-magnetic hover:shadow-md hover:shadow-orange-500/10"
                       aria-label={`Open conversation: ${conv.title}`}
-                      style={{ animationDelay: `${300 + index * 50}ms` }}
+                      style={{ animationDelay: `${350 + index * 50}ms` }}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="space-y-1.5 min-w-0">
@@ -205,7 +210,7 @@ export default function DashboardPage() {
         </section>
 
         {/* Quick Actions */}
-        <section aria-labelledby="actions-heading" className="animate-staggered-fade delay-300">
+        <section aria-labelledby="actions-heading" className="animate-staggered-fade delay-350">
           <Card className="glow-accent border-border/50">
             <CardHeader className="p-4 md:p-6">
               <CardTitle id="actions-heading" className="text-base md:text-lg flex items-center gap-2">
@@ -225,7 +230,7 @@ export default function DashboardPage() {
                       ? "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 border-0 ring-1 ring-orange-400/20" 
                       : "hover:border-sky-500/40 hover:bg-sky-500/8 hover:shadow-md hover:shadow-sky-500/20 border-border/60"
                   }`}
-                  style={{ animationDelay: `${350 + index * 100}ms` }}
+                  style={{ animationDelay: `${400 + index * 100}ms` }}
                 >
                   <Link href={action.href} className="flex items-center w-full">
                     {action.primary ? (
@@ -253,10 +258,7 @@ export default function DashboardPage() {
         </section>
       </div>
 
-      {/* Todos Section - Bottom of dashboard */}
-      <section aria-labelledby="todos-heading" className="animate-staggered-fade delay-350">
-        <TodoSection />
-      </section>
+      {/* TodoSection now moved up for better visibility */}
     </main>
   );
 }

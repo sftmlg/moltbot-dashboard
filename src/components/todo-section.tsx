@@ -134,15 +134,14 @@ export function TodoSection() {
   return (
     <Card className="glow-card border-border/50">
       <CardHeader className="p-4 md:p-6">
-        <CardTitle className="text-base md:text-lg flex items-center gap-2">
-          <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-          Todos
-          <Badge variant="outline" className="ml-auto text-xs">
-            {activeTodos.length} active
+        <CardTitle className="text-lg md:text-xl flex items-center gap-2 font-bold">
+          📋 Aufgaben
+          <Badge variant="outline" className="ml-auto text-xs border-emerald-500/50 text-emerald-500 bg-emerald-500/10">
+            {activeTodos.length} offen
           </Badge>
         </CardTitle>
-        <CardDescription className="text-xs md:text-sm">
-          Actionable items extracted from your conversations
+        <CardDescription className="text-sm md:text-base font-medium">
+          Wichtige Aufgaben und To-Dos
         </CardDescription>
       </CardHeader>
       <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
