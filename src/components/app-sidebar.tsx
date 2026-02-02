@@ -2,6 +2,7 @@
 
 import {
   Home,
+  Heart,
   LayoutDashboard,
   MessageSquare,
   Settings,
@@ -25,6 +26,7 @@ import {
 const navigationItems = [
   { title: "Dashboard", href: "/", icon: Home, label: "Go to dashboard" },
   { title: "Chat", href: "/chat", icon: MessageSquare, label: "Open chat" },
+  { title: "Valentinstag 💕", href: "/valentines", icon: Heart, label: "Valentine's weekend plans" },
   { title: "Settings", href: "/settings", icon: Settings, label: "Open settings" },
 ];
 
